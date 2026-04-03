@@ -53,6 +53,98 @@ const ADS = [
   }
 ];
 
+const UTILITY_IMAGES = [
+  'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&q=80&w=400&h=300',
+  'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=400&h=300',
+  'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=400&h=300'
+];
+
+function UtilitiesBox({ isPlaying }: { isPlaying: boolean }) {
+  const [currentImg, setCurrentImg] = useState(0);
+
+  useEffect(() => {
+    if (isPlaying) return;
+    const timer = setInterval(() => {
+      setCurrentImg((prev) => (prev + 1) % UTILITY_IMAGES.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [isPlaying]);
+
+  return (
+    <div className="h-48 sm:h-64 lg:h-full bg-spotify-light/20 rounded-2xl overflow-hidden border border-white/5 flex flex-col relative group">
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+        <Settings className="w-3.5 h-3.5 text-spotify-green" />
+        <span className="text-[10px] font-bold uppercase tracking-wider">Utilities</span>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {isPlaying ? (
+          <motion.div
+            key="playing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex flex-col items-center justify-center bg-black"
+          >
+            {/* Abstract Video Background */}
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover opacity-40"
+              referrerPolicy="no-referrer"
+            >
+              <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-lines-of-light-22122-large.mp4" type="video/mp4" />
+            </video>
+            
+            <div className="relative z-10 flex flex-col items-center gap-4">
+              <motion.div
+                animate={{ 
+                  rotate: 360,
+                  scale: [1, 1.05, 1]
+                }}
+                transition={{ 
+                  rotate: { repeat: Infinity, duration: 8, ease: "linear" },
+                  scale: { repeat: Infinity, duration: 2, ease: "easeInOut" }
+                }}
+                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-tr from-spotify-green to-emerald-400 p-1 shadow-2xl shadow-spotify-green/20"
+              >
+                <div className="w-full h-full rounded-full bg-black flex items-center justify-center border-4 border-black">
+                  <Music className="text-spotify-green w-8 h-8 sm:w-12 sm:h-12" />
+                </div>
+              </motion.div>
+              <div className="text-center">
+                <p className="text-xs font-bold text-spotify-green uppercase tracking-widest animate-pulse">On Air</p>
+                <p className="text-[10px] text-spotify-gray mt-1">Live Audio Stream Active</p>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="idle"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0"
+          >
+            <img 
+              src={UTILITY_IMAGES[currentImg]} 
+              alt="Utility"
+              className="w-full h-full object-cover opacity-50 grayscale hover:grayscale-0 transition-all duration-700"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent flex flex-col justify-end p-6">
+              <p className="text-sm font-medium text-white/80">Ready to Play</p>
+              <p className="text-[10px] text-spotify-gray mt-1">Select a station to start the visualizer</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function HeroSlideshow() {
   const [currentAd, setCurrentAd] = useState(0);
 
@@ -128,8 +220,8 @@ function HeroSlideshow() {
 
 export default function App() {
   const [state, setState] = useState<PlayerState>(() => {
-    const savedFavs = localStorage.getItem('pinoyRadio_favorites');
-    const savedRecent = localStorage.getItem('pinoyRadio_recent');
+    const savedFavs = localStorage.getItem('wePlay_favorites');
+    const savedRecent = localStorage.getItem('wePlay_recent');
     return {
       currentStation: RADIO_STATIONS[0] || null,
       isPlaying: false,
@@ -281,14 +373,14 @@ export default function App() {
         ? `Also, give a quick shoutout to: ${currentShoutouts.join(', ')}.`
         : '';
 
-      const prompt = `You are a cool, energetic AI DJ for GRADIO Station. 
+      const prompt = `You are a cool, energetic AI DJ for We Play Station. 
       The song that just finished was "${currentStation.name}". 
       The next song coming up is "${nextStation.name}". 
       ${shoutoutContext}
       Give a very short, energetic 1-2 sentence transition in Taglish (Tagalog-English). 
       Make it sound like a real radio DJ transition. 
       Keep it brief and exciting. 
-      Example: "Grabe, solid yung ${currentStation.name}! Up next, we have ${nextStation.name}. Keep it locked here on GRADIO Station!"`;
+      Example: "Grabe, solid yung ${currentStation.name}! Up next, we have ${nextStation.name}. Keep it locked here on We Play Station!"`;
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
@@ -430,11 +522,11 @@ export default function App() {
 
   // Persist state
   useEffect(() => {
-    localStorage.setItem('pinoyRadio_favorites', JSON.stringify(state.favorites));
+    localStorage.setItem('wePlay_favorites', JSON.stringify(state.favorites));
   }, [state.favorites]);
 
   useEffect(() => {
-    localStorage.setItem('pinoyRadio_recent', JSON.stringify(state.recentlyPlayed));
+    localStorage.setItem('wePlay_recent', JSON.stringify(state.recentlyPlayed));
   }, [state.recentlyPlayed]);
 
   // Audio control (Volume/Mute)
@@ -518,7 +610,7 @@ export default function App() {
             <div className="w-10 h-10 bg-spotify-green rounded-full flex items-center justify-center shadow-lg shadow-spotify-green/20">
               <Radio className="text-black w-6 h-6" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-white">Pinoy Radio</h1>
+            <h1 className="text-xl font-bold tracking-tight text-white">We Play</h1>
           </div>
 
           <nav className="space-y-1">
@@ -585,7 +677,7 @@ export default function App() {
                 <span>About</span>
               </div>
               <p className="text-[10px] text-spotify-gray leading-relaxed">
-                Pinoy Radio provides live streaming of Philippine radio stations. All streams are property of their respective owners.
+                We Play provides live streaming of Philippine radio stations. All streams are property of their respective owners.
               </p>
             </div>
           </div>
@@ -626,7 +718,16 @@ export default function App() {
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-4 lg:p-8 pb-32">
-          {view === 'all' && activeCategory === 'All' && !searchQuery && <HeroSlideshow />}
+          {view === 'all' && activeCategory === 'All' && !searchQuery && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <div className="lg:col-span-2">
+                <HeroSlideshow />
+              </div>
+              <div className="lg:col-span-1">
+                <UtilitiesBox isPlaying={state.isPlaying} />
+              </div>
+            </div>
+          )}
           
           <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
@@ -791,11 +892,11 @@ export default function App() {
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-sm font-bold truncate">
-                    {isDjSpeaking ? 'AI DJ Puck' : state.currentStation.name}
+                    {isDjSpeaking ? 'AI DJ' : state.currentStation.name}
                   </h4>
                   <div className="flex items-center gap-2">
                     <p className={`text-xs truncate ${error ? 'text-red-500 font-medium' : 'text-spotify-gray'}`}>
-                      {isDjSpeaking ? 'GRADIO Station • On Air' : (error || `${state.currentStation.frequency} • ${state.currentStation.location}`)}
+                      {isDjSpeaking ? 'We Play Station • On Air' : (error || `${state.currentStation.frequency} • ${state.currentStation.location}`)}
                     </p>
                     {error && (
                       <button 

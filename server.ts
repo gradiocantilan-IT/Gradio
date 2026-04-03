@@ -16,7 +16,7 @@ async function startServer() {
     },
   });
 
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || '3000', 10);
 
   // Store active ffmpeg processes
   const activeStreams = new Map<string, any>();

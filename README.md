@@ -1,20 +1,57 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# We Play - Philippine Radio & Music Streaming
 
-# Run and deploy your AI Studio app
+We Play is a modern, feature-rich web application for streaming Philippine FM/AM radio stations and local music. It features a sleek, Spotify-inspired interface, an AI-powered DJ, and live RTMPS broadcasting capabilities.
 
-This contains everything you need to run your app locally.
+## 🚀 Features
 
-View your app in AI Studio: https://ai.studio/apps/354fbf64-fe47-4b1e-ad80-be13e41bda1d
+- **Live Radio Streaming**: Access a wide range of Philippine radio stations (Manila, Provincial, News, Music).
+- **Local Music Library**: Curated collection of local music, including tracks from artists like Tesha.
+- **AI DJ (Puck)**: An intelligent AI DJ that provides energetic transitions between songs in Taglish, including personalized shoutouts.
+- **Visualizer**: Real-time audio visualizer that reacts to music and the AI DJ's voice.
+- **Favorites & History**: Save your favorite stations and keep track of what you've recently played.
+- **Live Broadcasting**: Stream the audio directly to platforms like Facebook or YouTube via RTMPS.
+- **Responsive Design**: Fully optimized for desktop and mobile devices.
 
-## Run Locally
+## 🛠️ Tech Stack
 
-**Prerequisites:**  Node.js
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Framer Motion.
+- **Audio Engine**: Howler.js.
+- **Backend**: Express, Socket.io (for streaming).
+- **AI**: Google Gemini API (@google/genai).
+- **Streaming**: FFmpeg (via fluent-ffmpeg).
 
+## 📦 Installation
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. Clone the repository.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up your environment variables in a `.env` file:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+## 🚀 Deployment
+
+### Vercel Compatibility
+
+This project is optimized for deployment on Vercel. However, please note:
+- The **Frontend** (React SPA) is fully compatible and will work out of the box.
+- The **RTMPS Streaming** feature requires a long-running server with FFmpeg installed. Since Vercel uses serverless functions, this specific feature will not work on Vercel's standard environment. For full functionality, consider deploying the backend to a platform that supports long-running processes (like Heroku, DigitalOcean, or Railway).
+
+### Build Command
+```bash
+npm run build
+```
+
+### Output Directory
+`dist`
+
+## 📄 License
+
+MIT
