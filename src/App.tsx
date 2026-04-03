@@ -21,6 +21,7 @@ import {
   Music
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { GoogleGenAI, Modality } from "@google/genai";
 import { RADIO_STATIONS } from './constants';
 import { RadioStation, PlayerState } from './types';
 
@@ -160,8 +161,65 @@ export default function App() {
   const [view, setView] = useState<'all' | 'favorites' | 'recent'>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDjSpeaking, setIsDjSpeaking] = useState(false);
 
   const howlRef = useRef<Howl | null>(null);
+  const djAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playNext = () => {
+    const currentIndex = RADIO_STATIONS.findIndex(s => s.id === state.currentStation?.id);
+    const nextIndex = (currentIndex + 1) % RADIO_STATIONS.length;
+    const nextStation = RADIO_STATIONS[nextIndex];
+    selectStation(nextStation);
+  };
+
+  const playPrevious = () => {
+    const currentIndex = RADIO_STATIONS.findIndex(s => s.id === state.currentStation?.id);
+    const prevIndex = (currentIndex - 1 + RADIO_STATIONS.length) % RADIO_STATIONS.length;
+    const prevStation = RADIO_STATIONS[prevIndex];
+    selectStation(prevStation);
+  };
+
+  const triggerAiDj = async (currentStation: RadioStation, nextStation: RadioStation) => {
+    setIsDjSpeaking(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const prompt = `You are a cool, energetic AI DJ for GRADIO Station. 
+      The song that just finished was "${currentStation.name}". 
+      The next song coming up is "${nextStation.name}". 
+      Give a very short, energetic 1 sentence transition in Taglish (Tagalog-English). 
+      Keep it brief and exciting. 
+      Example: "That was ${currentStation.name}, solid vibes! Up next, we have ${nextStation.name}. Keep it locked here on GRADIO Station!"`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-preview-tts",
+        contents: [{ parts: [{ text: prompt }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Puck' },
+            },
+          },
+        },
+      });
+
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (base64Audio) {
+        const audioUrl = `data:audio/mp3;base64,${base64Audio}`;
+        if (djAudioRef.current) {
+          djAudioRef.current.src = audioUrl;
+          djAudioRef.current.play();
+        }
+      } else {
+        playNext();
+      }
+    } catch (error) {
+      console.error("AI DJ Error:", error);
+      setIsDjSpeaking(false);
+      playNext();
+    }
+  };
 
   // Sync audio state with component state
   useEffect(() => {
@@ -208,6 +266,12 @@ export default function App() {
         },
         onpause: () => {
           setIsLoading(false);
+        },
+        onend: () => {
+          const currentIndex = RADIO_STATIONS.findIndex(s => s.id === state.currentStation?.id);
+          const nextIndex = (currentIndex + 1) % RADIO_STATIONS.length;
+          const nextStation = RADIO_STATIONS[nextIndex];
+          triggerAiDj(state.currentStation!, nextStation);
         }
       });
     }
@@ -528,9 +592,13 @@ export default function App() {
           <div className="flex items-center gap-4 w-1/3 min-w-0">
             {state.currentStation ? (
               <>
-                <div className={`w-14 h-14 bg-spotify-light rounded-md flex items-center justify-center flex-shrink-0 relative overflow-hidden ${state.isPlaying ? 'ring-2 ring-spotify-green/50' : ''}`}>
-                  <Radio className={`w-8 h-8 z-10 ${state.isPlaying ? 'text-spotify-green' : 'text-spotify-gray'}`} />
-                  {state.isPlaying && (
+                <div className={`w-14 h-14 bg-spotify-light rounded-md flex items-center justify-center flex-shrink-0 relative overflow-hidden ${(state.isPlaying || isDjSpeaking) ? 'ring-2 ring-spotify-green/50' : ''}`}>
+                  {isDjSpeaking ? (
+                    <Mic2 className="w-8 h-8 z-10 text-spotify-green animate-pulse" />
+                  ) : (
+                    <Radio className={`w-8 h-8 z-10 ${state.isPlaying ? 'text-spotify-green' : 'text-spotify-gray'}`} />
+                  )}
+                  {(state.isPlaying || isDjSpeaking) && (
                     <motion.div 
                       animate={{ 
                         scale: [1, 1.5, 1],
@@ -551,10 +619,12 @@ export default function App() {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-sm font-bold truncate">{state.currentStation.name}</h4>
+                  <h4 className="text-sm font-bold truncate">
+                    {isDjSpeaking ? 'AI DJ Puck' : state.currentStation.name}
+                  </h4>
                   <div className="flex items-center gap-2">
                     <p className={`text-xs truncate ${error ? 'text-red-500 font-medium' : 'text-spotify-gray'}`}>
-                      {error || `${state.currentStation.frequency} • ${state.currentStation.location}`}
+                      {isDjSpeaking ? 'GRADIO Station • On Air' : (error || `${state.currentStation.frequency} • ${state.currentStation.location}`)}
                     </p>
                     {error && (
                       <button 
@@ -581,12 +651,16 @@ export default function App() {
           {/* Player Controls */}
           <div className="flex flex-col items-center gap-2 w-1/3">
             <div className="flex items-center gap-6">
-              <button className="text-spotify-gray hover:text-white transition-colors disabled:opacity-30" disabled>
+              <button 
+                onClick={playPrevious}
+                disabled={!state.currentStation || isDjSpeaking}
+                className="text-spotify-gray hover:text-white transition-colors disabled:opacity-30"
+              >
                 <SkipBack className="w-5 h-5 fill-current" />
               </button>
               <button 
                 onClick={togglePlay}
-                disabled={!state.currentStation || isLoading}
+                disabled={!state.currentStation || isLoading || isDjSpeaking}
                 className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform disabled:opacity-50"
               >
                 {state.isPlaying ? (
@@ -595,7 +669,11 @@ export default function App() {
                   <Play className="text-black fill-black w-5 h-5 ml-1" />
                 )}
               </button>
-              <button className="text-spotify-gray hover:text-white transition-colors disabled:opacity-30" disabled>
+              <button 
+                onClick={playNext}
+                disabled={!state.currentStation || isDjSpeaking}
+                className="text-spotify-gray hover:text-white transition-colors disabled:opacity-30"
+              >
                 <SkipForward className="w-5 h-5 fill-current" />
               </button>
             </div>
@@ -643,6 +721,16 @@ export default function App() {
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
+
+      {/* AI DJ Audio Element */}
+      <audio 
+        ref={djAudioRef} 
+        onEnded={() => {
+          setIsDjSpeaking(false);
+          playNext();
+        }}
+        className="hidden"
+      />
 
       {/* Audio logic is now handled by Howler.js in useEffect */}
     </div>
