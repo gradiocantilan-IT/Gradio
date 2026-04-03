@@ -77,7 +77,7 @@ export const RADIO_STATIONS: RadioStation[] = [
     id: 'lost-in-your-shadow',
     name: "I'm Lost in Your Shadow",
     frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/I\'M-LOST-IN-YOUR-SHADOW.mp3',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/I%27M-LOST-IN-YOUR-SHADOW.mp3',
     category: 'Music',
     location: 'Cantilan',
     description: 'Local music from Cantilan.'

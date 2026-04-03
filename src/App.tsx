@@ -206,10 +206,44 @@ export default function App() {
 
       const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (base64Audio) {
-        const audioUrl = `data:audio/mp3;base64,${base64Audio}`;
+        // Convert raw PCM to WAV
+        const binaryString = window.atob(base64Audio);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        const sampleRate = 24000;
+        const numChannels = 1;
+        const bitsPerSample = 16;
+        
+        const header = new ArrayBuffer(44);
+        const view = new DataView(header);
+        
+        view.setUint32(0, 0x52494646, false); // RIFF
+        view.setUint32(4, 36 + bytes.length, true);
+        view.setUint32(8, 0x57415645, false); // WAVE
+        view.setUint32(12, 0x666d7420, false); // fmt 
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); // PCM
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * numChannels * bitsPerSample / 8, true);
+        view.setUint16(32, numChannels * bitsPerSample / 8, true);
+        view.setUint16(34, bitsPerSample, true);
+        view.setUint32(36, 0x64617461, false); // data
+        view.setUint32(40, bytes.length, true);
+        
+        const blob = new Blob([header, bytes], { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(blob);
+        
         if (djAudioRef.current) {
           djAudioRef.current.src = audioUrl;
-          djAudioRef.current.play();
+          djAudioRef.current.play().catch(err => {
+            console.error("DJ Play Error:", err);
+            playNext();
+          });
         }
       } else {
         playNext();
@@ -228,7 +262,12 @@ export default function App() {
     const streamUrl = state.currentStation.streamUrl;
 
     // If station changed or no howl instance, create new one
-    if (!howlRef.current || (howlRef.current as any)._src !== streamUrl) {
+    const currentHowlSrc = (howlRef.current as any)?._src;
+    const isSameSrc = Array.isArray(currentHowlSrc) 
+      ? currentHowlSrc[0] === streamUrl 
+      : currentHowlSrc === streamUrl;
+
+    if (!howlRef.current || !isSameSrc) {
       if (howlRef.current) {
         howlRef.current.unload();
       }
@@ -238,8 +277,7 @@ export default function App() {
 
       howlRef.current = new Howl({
         src: [streamUrl],
-        html5: true, // Required for streaming
-        format: ['mp3'],
+        html5: false, // Use Web Audio for better reliability with CORS
         autoplay: false,
         volume: state.isMuted ? 0 : state.volume / 100,
         onload: () => {
@@ -727,6 +765,9 @@ export default function App() {
         ref={djAudioRef} 
         onEnded={() => {
           setIsDjSpeaking(false);
+          if (djAudioRef.current?.src.startsWith('blob:')) {
+            URL.revokeObjectURL(djAudioRef.current.src);
+          }
           playNext();
         }}
         className="hidden"
