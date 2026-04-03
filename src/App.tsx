@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Howl } from 'howler';
+import { Howl, Howler } from 'howler';
+import { io, Socket } from 'socket.io-client';
+import { Visualizer } from './components/Visualizer';
 import { 
   Play, 
   Pause, 
@@ -18,7 +20,12 @@ import {
   X,
   Mic2,
   Newspaper,
-  Music
+  Music,
+  Cast,
+  Settings,
+  AlertCircle,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI, Modality } from "@google/genai";
@@ -118,28 +125,6 @@ function HeroSlideshow() {
   );
 }
 
-function Visualizer({ isPlaying }: { isPlaying: boolean }) {
-  if (!isPlaying) return null;
-  
-  return (
-    <div className="flex items-center gap-1 h-12">
-      {[...Array(12)].map((_, i) => (
-        <motion.div
-          key={i}
-          animate={{
-            height: [10, Math.random() * 40 + 10, 10],
-          }}
-          transition={{
-            duration: 0.5 + Math.random() * 0.5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          className="w-1.5 bg-spotify-green rounded-full opacity-80"
-        />
-      ))}
-    </div>
-  );
-}
 
 export default function App() {
   const [state, setState] = useState<PlayerState>(() => {
@@ -162,9 +147,114 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDjSpeaking, setIsDjSpeaking] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [rtmpsUrl, setRtmpsUrl] = useState('');
+  const [streamStatus, setStreamStatus] = useState<'idle' | 'starting' | 'live' | 'error'>('idle');
+  const [showStreamingModal, setShowStreamingModal] = useState(false);
+  const [shoutout, setShoutout] = useState('');
+  const [pendingShoutouts, setPendingShoutouts] = useState<string[]>([]);
+  const [showDjBooth, setShowDjBooth] = useState(false);
 
+  const socketRef = useRef<Socket | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const howlRef = useRef<Howl | null>(null);
   const djAudioRef = useRef<HTMLAudioElement | null>(null);
+  const djSourceNodeRef = useRef<any>(null);
+  const destNodeRef = useRef<any>(null);
+
+  // Initialize socket
+  useEffect(() => {
+    socketRef.current = io();
+    
+    socketRef.current.on('stream-status', ({ status, message }) => {
+      if (status === 'started') {
+        setStreamStatus('live');
+      } else if (status === 'error') {
+        setStreamStatus('error');
+        setError(message || 'Failed to start stream');
+        stopStreaming();
+      }
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
+
+  const startStreaming = () => {
+    if (!rtmpsUrl) {
+      setError('Please enter an RTMPS URL');
+      return;
+    }
+
+    // Basic validation for Facebook/YouTube RTMPS URLs
+    if (rtmpsUrl.includes('facebook.com') && !rtmpsUrl.includes('/rtmp/')) {
+      setError('Invalid Facebook RTMPS URL. Make sure it starts with rtmps:// and includes the stream key.');
+      return;
+    }
+
+    if (rtmpsUrl.endsWith('/rtmp/') || rtmpsUrl.endsWith('/live2/')) {
+      setError('Missing Stream Key. Please append your stream key to the URL.');
+      return;
+    }
+
+    setStreamStatus('starting');
+    setIsStreaming(true);
+
+    try {
+      // Ensure AudioContext is running
+      if (Howler.ctx.state === 'suspended') {
+        Howler.ctx.resume();
+      }
+
+      // Capture audio from Howler (only once)
+      if (!destNodeRef.current) {
+        destNodeRef.current = Howler.ctx.createMediaStreamDestination();
+        Howler.masterGain.connect(destNodeRef.current);
+      }
+
+      // Also capture DJ audio if playing (only once)
+      if (djAudioRef.current && !djSourceNodeRef.current) {
+        try {
+          djSourceNodeRef.current = Howler.ctx.createMediaElementSource(djAudioRef.current);
+          djSourceNodeRef.current.connect(destNodeRef.current);
+          djSourceNodeRef.current.connect(Howler.ctx.destination); // Still play locally
+        } catch (e) {
+          console.warn("DJ Source already connected or failed:", e);
+        }
+      }
+
+      const mediaRecorder = new MediaRecorder(destNodeRef.current.stream, {
+        mimeType: 'audio/webm;codecs=opus',
+        audioBitsPerSecond: 128000
+      });
+
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0 && socketRef.current && socketRef.current.connected) {
+          socketRef.current.emit('stream-data', event.data);
+        }
+      };
+
+      socketRef.current?.emit('start-stream', { rtmpsUrl });
+      mediaRecorder.start(2000); // Send chunks every 2 seconds
+    } catch (err) {
+      console.error('Failed to start media recorder:', err);
+      setStreamStatus('error');
+      setIsStreaming(false);
+      setError('Streaming failed to initialize. Please try again.');
+    }
+  };
+
+  const stopStreaming = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    socketRef.current?.emit('stop-stream');
+    setIsStreaming(false);
+    setStreamStatus('idle');
+  };
 
   const playNext = () => {
     const currentIndex = RADIO_STATIONS.findIndex(s => s.id === state.currentStation?.id);
@@ -182,12 +272,20 @@ export default function App() {
 
   const triggerAiDj = async (currentStation: RadioStation, nextStation: RadioStation) => {
     setIsDjSpeaking(true);
+    const currentShoutouts = [...pendingShoutouts];
+    setPendingShoutouts([]); // Clear for next time
+
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const shoutoutContext = currentShoutouts.length > 0 
+        ? `Also, give a quick shoutout to: ${currentShoutouts.join(', ')}.`
+        : '';
+
       const prompt = `You are a cool, energetic AI DJ for GRADIO Station. 
       The song that just finished was "${currentStation.name}". 
       The next song coming up is "${nextStation.name}". 
-      Give a very short, energetic 1 sentence transition in Taglish (Tagalog-English). 
+      ${shoutoutContext}
+      Give a very short, energetic 1-2 sentence transition in Taglish (Tagalog-English). 
       Make it sound like a real radio DJ transition. 
       Keep it brief and exciting. 
       Example: "Grabe, solid yung ${currentStation.name}! Up next, we have ${nextStation.name}. Keep it locked here on GRADIO Station!"`;
@@ -442,6 +540,18 @@ export default function App() {
               active={view === 'recent'} 
               onClick={() => { setView('recent'); setIsSidebarOpen(false); }} 
             />
+            <SidebarLink 
+              icon={<Cast className="w-5 h-5" />} 
+              label="Go Live (RTMPS)" 
+              active={showStreamingModal} 
+              onClick={() => { setShowStreamingModal(true); setIsSidebarOpen(false); }} 
+            />
+            <SidebarLink 
+              icon={<Mic2 className="w-5 h-5" />} 
+              label="DJ Booth" 
+              active={showDjBooth} 
+              onClick={() => { setShowDjBooth(true); setIsSidebarOpen(false); }} 
+            />
           </nav>
 
           <div className="mt-8">
@@ -533,7 +643,13 @@ export default function App() {
                   <p className="text-[10px] text-spotify-green font-bold uppercase tracking-tighter">Now Playing</p>
                   <p className="text-xs font-bold text-white truncate max-w-[150px]">{state.currentStation.name}</p>
                 </div>
-                <Visualizer isPlaying={state.isPlaying} />
+                <div className="w-24 h-8">
+                  <Visualizer 
+                    audioContext={Howler.ctx} 
+                    sourceNode={Howler.masterGain} 
+                    isDjSpeaking={isDjSpeaking} 
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -555,7 +671,16 @@ export default function App() {
                   `}
                 >
                   <div className="relative aspect-square mb-4 bg-spotify-light rounded-lg flex items-center justify-center overflow-hidden">
-                    <Radio className={`w-12 h-12 ${state.currentStation?.id === station.id ? 'text-spotify-green' : 'text-spotify-gray'}`} />
+                    {station.logoUrl ? (
+                      <img 
+                        src={station.logoUrl} 
+                        alt={station.name}
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <Radio className={`w-12 h-12 ${state.currentStation?.id === station.id ? 'text-spotify-green' : 'text-spotify-gray'}`} />
+                    )}
                     
                     {/* Play Overlay */}
                     <div className={`
@@ -634,6 +759,13 @@ export default function App() {
                 <div className={`w-14 h-14 bg-spotify-light rounded-md flex items-center justify-center flex-shrink-0 relative overflow-hidden ${(state.isPlaying || isDjSpeaking) ? 'ring-2 ring-spotify-green/50' : ''}`}>
                   {isDjSpeaking ? (
                     <Mic2 className="w-8 h-8 z-10 text-spotify-green animate-pulse" />
+                  ) : state.currentStation.logoUrl ? (
+                    <img 
+                      src={state.currentStation.logoUrl} 
+                      alt={state.currentStation.name}
+                      className="w-full h-full object-cover z-10"
+                      referrerPolicy="no-referrer"
+                    />
                   ) : (
                     <Radio className={`w-8 h-8 z-10 ${state.isPlaying ? 'text-spotify-green' : 'text-spotify-gray'}`} />
                   )}
@@ -684,6 +816,17 @@ export default function App() {
               </>
             ) : (
               <div className="text-spotify-gray text-sm italic">Select a station to start listening</div>
+            )}
+          </div>
+
+          {/* Visualizer */}
+          <div className="hidden xl:flex items-center justify-center w-1/6 h-8 px-4 opacity-40">
+            {state.isPlaying && (
+              <Visualizer 
+                audioContext={Howler.ctx} 
+                sourceNode={Howler.masterGain} 
+                isDjSpeaking={isDjSpeaking} 
+              />
             )}
           </div>
 
@@ -760,6 +903,175 @@ export default function App() {
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
+
+      {/* DJ Booth Modal */}
+      <AnimatePresence>
+        {showDjBooth && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-spotify-light w-full max-w-md rounded-xl p-6 shadow-2xl border border-white/10"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <Mic2 className="w-6 h-6 text-spotify-green" />
+                  <h2 className="text-xl font-bold">DJ Booth</h2>
+                </div>
+                <button 
+                  onClick={() => setShowDjBooth(false)}
+                  className="text-spotify-gray hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-spotify-gray uppercase mb-2">Send a Shoutout</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text"
+                      placeholder="e.g. Shoutout to my friends in QC!"
+                      value={shoutout}
+                      onChange={(e) => setShoutout(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && shoutout.trim()) {
+                          setPendingShoutouts(prev => [...prev, shoutout.trim()]);
+                          setShoutout('');
+                        }
+                      }}
+                      className="flex-1 bg-black/40 border border-white/10 rounded-md px-4 py-3 text-sm focus:outline-none focus:border-spotify-green transition-colors"
+                    />
+                    <button 
+                      onClick={() => {
+                        if (shoutout.trim()) {
+                          setPendingShoutouts(prev => [...prev, shoutout.trim()]);
+                          setShoutout('');
+                        }
+                      }}
+                      className="bg-spotify-green text-black p-3 rounded-md hover:scale-105 transition-transform"
+                    >
+                      <Send className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-spotify-gray mt-2 italic">
+                    The AI DJ will mention these during the next song transition.
+                  </p>
+                </div>
+
+                {pendingShoutouts.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-bold text-spotify-gray uppercase mb-3">Pending Shoutouts</h3>
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                      {pendingShoutouts.map((s, i) => (
+                        <div key={i} className="flex items-center justify-between bg-black/20 p-3 rounded-md border border-white/5 group">
+                          <span className="text-sm text-white/90">{s}</span>
+                          <button 
+                            onClick={() => setPendingShoutouts(prev => prev.filter((_, idx) => idx !== i))}
+                            className="text-spotify-gray hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-spotify-green/10 border border-spotify-green/20 rounded-xl p-4 flex gap-4">
+                  <div className="w-12 h-12 bg-spotify-green rounded-full flex items-center justify-center shrink-0">
+                    <MessageSquare className="text-black w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-spotify-green">AI DJ Status</h4>
+                    <p className="text-xs text-spotify-gray leading-relaxed mt-1">
+                      {isDjSpeaking ? 'DJ is currently on air...' : 'DJ is waiting for the next transition.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Streaming Modal */}
+      <AnimatePresence>
+        {showStreamingModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-spotify-light w-full max-w-md rounded-xl p-6 shadow-2xl border border-white/10"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <Cast className="w-6 h-6 text-spotify-green" />
+                  <h2 className="text-xl font-bold">RTMPS Streaming</h2>
+                </div>
+                <button 
+                  onClick={() => setShowStreamingModal(false)}
+                  className="text-spotify-gray hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-spotify-gray uppercase mb-2">RTMPS Server URL & Stream Key</label>
+                  <input 
+                    type="text"
+                    placeholder="rtmps://live-api-s.facebook.com:443/rtmp/FB-123456789-0-..."
+                    value={rtmpsUrl}
+                    onChange={(e) => setRtmpsUrl(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-md px-4 py-3 text-sm focus:outline-none focus:border-spotify-green transition-colors"
+                  />
+                  <p className="text-[10px] text-spotify-gray mt-2">
+                    Combine your Server URL and Stream Key. For Facebook, it should look like: <span className="text-white">rtmps://.../rtmp/&lt;your-key&gt;</span>
+                  </p>
+                </div>
+
+                {streamStatus === 'error' && (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                    <p className="text-xs text-red-200">{error}</p>
+                  </div>
+                )}
+
+                <div className="pt-4">
+                  {!isStreaming ? (
+                    <button 
+                      onClick={startStreaming}
+                      className="w-full bg-spotify-green text-black font-bold py-3 rounded-full hover:scale-105 transition-transform active:scale-95"
+                    >
+                      Start Broadcasting
+                    </button>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-center gap-3 py-2">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                        <span className="text-sm font-bold text-red-500 uppercase tracking-wider">
+                          {streamStatus === 'starting' ? 'Connecting...' : 'Live on RTMPS'}
+                        </span>
+                      </div>
+                      <button 
+                        onClick={stopStreaming}
+                        className="w-full bg-white text-black font-bold py-3 rounded-full hover:scale-105 transition-transform active:scale-95"
+                      >
+                        Stop Stream
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* AI DJ Audio Element */}
       <audio 

@@ -2,46 +2,10 @@ import { RadioStation } from './types';
 
 export const RADIO_STATIONS: RadioStation[] = [
   {
-    id: 'angsohon',
-    name: 'Angsohon',
+    id: 'tesha',
+    name: 'Tesha',
     frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Angsohon.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
-    id: 'bakak-bakak',
-    name: 'Bakak-bakak',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Bakak-bakak.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
-    id: 'barug-cantilan',
-    name: 'Barug Cantilan',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Barug-Cantilan.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
-    id: 'cantilan-pastilan',
-    name: 'Cantilan Pastilan',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/CANTILAN-PASTILAN.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
-    id: 'earthquake',
-    name: 'Earthquake',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Earthquake.mp3',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Tesha.mp3',
     category: 'Music',
     location: 'Cantilan',
     description: 'Local music from Cantilan.'
@@ -51,42 +15,7 @@ export const RADIO_STATIONS: RadioStation[] = [
     name: 'End of a Journey (Tesha)',
     frequency: 'Online',
     streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/End-of-a-journey-TESHA.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
-    id: 'fiesta-silingan',
-    name: 'Fiesta Silingan',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Fiesta-Silingan.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
-    id: 'finding-peace',
-    name: 'Finding Peace',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Finding-Peace.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
-    id: 'lost-in-your-shadow',
-    name: "I'm Lost in Your Shadow",
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/I%27M-LOST-IN-YOUR-SHADOW.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
-    id: 'sky-drive',
-    name: 'I Can Sky Drive',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/I-can-sky-drive.mp3',
+    logoUrl: 'https://picsum.photos/seed/journey/400/400',
     category: 'Music',
     location: 'Cantilan',
     description: 'Local music from Cantilan.'
@@ -96,6 +25,7 @@ export const RADIO_STATIONS: RadioStation[] = [
     name: 'I Hope It Was a Dream (Tesha)',
     frequency: 'Online',
     streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/I-hope-it-was-a-dream-TESHA.mp3',
+    logoUrl: 'https://picsum.photos/seed/dream/400/400',
     category: 'Music',
     location: 'Cantilan',
     description: 'Local music from Cantilan.'
@@ -105,6 +35,133 @@ export const RADIO_STATIONS: RadioStation[] = [
     name: "I'm Not the One (Tesha)",
     frequency: 'Online',
     streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Im-not-the-one-TESHA.mp3',
+    logoUrl: 'https://picsum.photos/seed/nottheone/400/400',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'perilous-journey',
+    name: 'Perilous Journey (Tesha)',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Perilous-journey-TESHA.mp3',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'soul-intuition',
+    name: 'Soul Intuition (Tesha)',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Soul-intuition-TESHA.mp3',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'color-my-eyes',
+    name: 'You Color My Eyes (Tesha)',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/You-color-my-eyes-TESHA.mp3',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'your-my-tesha',
+    name: 'Your My Tesha',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Your-my-Tesha.mp3',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'angsohon',
+    name: 'Angsohon',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Angsohon.mp3',
+    logoUrl: 'https://picsum.photos/seed/angsohon/400/400',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'bakak-bakak',
+    name: 'Bakak-bakak',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Bakak-bakak.mp3',
+    logoUrl: 'https://picsum.photos/seed/bakak-bakak/400/400',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'barug-cantilan',
+    name: 'Barug Cantilan',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Barug-Cantilan.mp3',
+    logoUrl: 'https://picsum.photos/seed/barug-cantilan/400/400',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'cantilan-pastilan',
+    name: 'Cantilan Pastilan',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/CANTILAN-PASTILAN.mp3',
+    logoUrl: 'https://picsum.photos/seed/cantilan-pastilan/400/400',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'earthquake',
+    name: 'Earthquake',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Earthquake.mp3',
+    logoUrl: 'https://picsum.photos/seed/earthquake/400/400',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'fiesta-silingan',
+    name: 'Fiesta Silingan',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Fiesta-Silingan.mp3',
+    logoUrl: 'https://picsum.photos/seed/fiesta/400/400',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'finding-peace',
+    name: 'Finding Peace',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Finding-Peace.mp3',
+    logoUrl: 'https://picsum.photos/seed/peace/400/400',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'lost-in-your-shadow',
+    name: "I'm Lost in Your Shadow",
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/I%27M-LOST-IN-YOUR-SHADOW.mp3',
+    logoUrl: 'https://picsum.photos/seed/shadow/400/400',
+    category: 'Music',
+    location: 'Cantilan',
+    description: 'Local music from Cantilan.'
+  },
+  {
+    id: 'sky-drive',
+    name: 'I Can Sky Drive',
+    frequency: 'Online',
+    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/I-can-sky-drive.mp3',
+    logoUrl: 'https://picsum.photos/seed/skydrive/400/400',
     category: 'Music',
     location: 'Cantilan',
     description: 'Local music from Cantilan.'
@@ -114,6 +171,7 @@ export const RADIO_STATIONS: RadioStation[] = [
     name: 'Inday Uno',
     frequency: 'Online',
     streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Inday-Uno.mp3',
+    logoUrl: 'https://picsum.photos/seed/inday/400/400',
     category: 'Music',
     location: 'Cantilan',
     description: 'Local music from Cantilan.'
@@ -123,6 +181,7 @@ export const RADIO_STATIONS: RadioStation[] = [
     name: 'Jesus is Yeshua',
     frequency: 'Online',
     streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/JESUS-IS-YESHUA.mp3',
+    logoUrl: 'https://picsum.photos/seed/jesus/400/400',
     category: 'Music',
     location: 'Cantilan',
     description: 'Local music from Cantilan.'
@@ -209,15 +268,6 @@ export const RADIO_STATIONS: RadioStation[] = [
     description: 'Local music from Cantilan.'
   },
   {
-    id: 'perilous-journey',
-    name: 'Perilous Journey (Tesha)',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Perilous-journey-TESHA.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
     id: 'sea-wall',
     name: 'Sea Wall Cantilan',
     frequency: 'Online',
@@ -258,15 +308,6 @@ export const RADIO_STATIONS: RadioStation[] = [
     name: 'Sorry Gaw (Final Version)',
     frequency: 'Online',
     streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Sorry-Gaw%3DFinal-Version.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
-    id: 'soul-intuition',
-    name: 'Soul Intuition (Tesha)',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Soul-intuition-TESHA.mp3',
     category: 'Music',
     location: 'Cantilan',
     description: 'Local music from Cantilan.'
@@ -335,15 +376,6 @@ export const RADIO_STATIONS: RadioStation[] = [
     description: 'Local music from Cantilan.'
   },
   {
-    id: 'tesha',
-    name: 'Tesha',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Tesha.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
     id: 'the-void',
     name: 'The Void',
     frequency: 'Online',
@@ -357,24 +389,6 @@ export const RADIO_STATIONS: RadioStation[] = [
     name: 'Uyan-uyan sa Cantilan',
     frequency: 'Online',
     streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Uyan-uyan-sa-Cantilan.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
-    id: 'color-my-eyes',
-    name: 'You Color My Eyes (Tesha)',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/You-color-my-eyes-TESHA.mp3',
-    category: 'Music',
-    location: 'Cantilan',
-    description: 'Local music from Cantilan.'
-  },
-  {
-    id: 'your-my-tesha',
-    name: 'Your My Tesha',
-    frequency: 'Online',
-    streamUrl: 'https://raw.githubusercontent.com/nasmusic-ai/RAW-music/main/music/Your-my-Tesha.mp3',
     category: 'Music',
     location: 'Cantilan',
     description: 'Local music from Cantilan.'
