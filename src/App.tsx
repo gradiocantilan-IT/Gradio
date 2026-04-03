@@ -28,19 +28,19 @@ import { RadioStation, PlayerState } from './types';
 const ADS = [
   {
     id: 1,
-    image: 'https://images.unsplash.com/photo-1513531926349-466f15ec8cc7?auto=format&fit=crop&q=80&w=1200&h=400',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsMpvV6-XopeMTU2H1VRdaddqVk9Ckaeao7g&s',
     title: 'Eyeberry: Natural Vision Support',
     subtitle: 'Rich in antioxidants for your daily eye health'
   },
   {
     id: 2,
-    image: 'https://images.unsplash.com/photo-1464305795204-6f5bbfc7fb81?auto=format&fit=crop&q=80&w=1200&h=400',
+    image: 'https://down-ph.img.susercontent.com/file/ph-11134207-81ztf-mm5p7rs2slxh97',
     title: 'Eyeberry Gold: Premium Protection',
     subtitle: 'Enhanced formula with Lutein and Zeaxanthin'
   },
   {
     id: 3,
-    image: 'https://images.unsplash.com/photo-1444491741275-3747c53c99b4?auto=format&fit=crop&q=80&w=1200&h=400',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_8xsCtywh-ygyEI3VllELoZNYyusG1yxBHw&s',
     title: 'See the World Clearly',
     subtitle: 'The #1 choice for Filipino eye care'
   }
