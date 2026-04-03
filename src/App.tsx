@@ -188,8 +188,9 @@ export default function App() {
       The song that just finished was "${currentStation.name}". 
       The next song coming up is "${nextStation.name}". 
       Give a very short, energetic 1 sentence transition in Taglish (Tagalog-English). 
+      Make it sound like a real radio DJ transition. 
       Keep it brief and exciting. 
-      Example: "That was ${currentStation.name}, solid vibes! Up next, we have ${nextStation.name}. Keep it locked here on GRADIO Station!"`;
+      Example: "Grabe, solid yung ${currentStation.name}! Up next, we have ${nextStation.name}. Keep it locked here on GRADIO Station!"`;
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
